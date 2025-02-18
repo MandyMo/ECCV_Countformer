@@ -72,6 +72,10 @@ from torch.cuda.amp import autocast as autocast
 
 class Trainer(object):
     def __init__(self, args, rank=0, world_size=1, amp=False):
+        # make the training procedure faster!!!
+        torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
+
         self.args, self.device_count, self.rank, self.world_size, self.amp = args, torch.cuda.device_count(), rank, world_size, amp
         self.device = torch.device('cuda:{}'.format(self.rank)) if torch.cuda.is_available() else torch.device('cpu')
         
@@ -342,7 +346,8 @@ class Trainer(object):
     def do_train(self):
         import math
         sv_folder = self.cfg.optimization.logger_cfg.chkp_sv_path
-        os.makedirs(sv_folder, exist_ok=True)
+        if self.is_master_node:
+            os.makedirs(sv_folder, exist_ok=True)
         best_nae_bev, best_mae_bev, best_nae_img, best_mae_img=math.inf, math.inf, math.inf, math.inf
         for epoch in range(self.start_epoch, self.cfg.optimization.train_cfg.epoches):
             self.train(epoch)

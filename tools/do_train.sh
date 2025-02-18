@@ -1,5 +1,9 @@
 set -x
 
+
+#solve the cuda-extension compilation error!
+export TORCH_CUDA_ARCH_LIST="8.0"
+
 #solve the over-load problem
 export MKL_NUM_THREADS=1
 export NUMEXPR_NUM_THREADS=1
@@ -12,7 +16,7 @@ export PYTHONPATH=$proj_path:$PYTHONPATH
 
 # configs for each dataset
 citystreet_cfg=projects/configs/citystreet/swin_benchmark_lr.py
-cross_view_cfg=projects/configs/cross_view/voxel/swin_benchmark_lr_cam_embed_img_vox.py
+cross_view_cfg=projects/configs/cross_view/voxel/cscv_voxel.py
 
 #some parameters
 seed=42

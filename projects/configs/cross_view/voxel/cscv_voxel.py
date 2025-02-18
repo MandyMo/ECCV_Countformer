@@ -23,11 +23,11 @@ total_view=100
 down_scale=4           #the down-scale of the image space density map
 _dim_ = [64, 128, 192, 256]
 _ffn_dim_ = [d*2 for d in _dim_]
-vox_h=[256//2,128//2,64//2,32//2]
-vox_w=[256//2,128//2,64//2,32//2]
-vox_z=[16//2,8//2,4//2,2//2]
+vox_h=[256,128,64,32]
+vox_w=[256,128,64,32]
+vox_z=[16,8,4,2]
 _num_points_=[4,8,12,16]
-_num_layers_=[2,3,4,5]
+_num_layers_=[3,5,7,9]
 
 #for vox-feature fusion
 dim_vox_fpn    = [_dim_[3], 256, 256, _dim_[2], 128, 128, _dim_[1], 64, 64, _dim_[0], 32, 16, 16]
@@ -39,12 +39,12 @@ stride=32
 scale=1.0
 crop_w=math.ceil(ori_w*scale/stride) * stride
 crop_h=math.ceil(ori_h*scale/stride) * stride
-n_sel_view=11
+n_sel_view=5
 
 #for debug only
-vox_hm_z=16
-vox_hm_h=256
-vox_hm_w=256
+vox_hm_z=32
+vox_hm_h=512
+vox_hm_w=512
 
 #for heatmap-generator
 img_density_map_scale=100
@@ -147,6 +147,34 @@ val_data_pipeline = edict(
     ]
 )
 
+test_data_pipeline = edict( # test-time augment
+    type='BEVTTA',
+    image_scales=[1.0*scale, 0.8*scale, 0.9*scale, 1.1*scale],
+    bev_scales=[1.0],
+    bev_xf=[False, True],
+    bev_yf=[False, True],
+    bev_rots=[0,-90,-45,45,90],
+    crop_info=['center', 'bottom', crop_w, crop_h],
+    pt_filter=edict(
+        type='FilterOutlier',
+        employ_mask=True,
+        world_range=world_range,
+        filter_z=True,
+    ),
+    density_generator = edict(
+        type='GenDensity3D',
+        down_scale=down_scale,
+        gen_image_density_map=True,
+        gen_vox_density_map=True,
+        world_range=world_range,
+        vox_hm_z=vox_hm_z,
+        vox_hm_h=vox_hm_h,
+        vox_hm_w=vox_hm_w,
+        img_density_generator=edict(type='GaussianFilterDensityMapGenerator', sigma=3, scale=img_density_map_scale),
+        vox_density_generator=edict(type='GaussianFilterDensityMapGenerator', sigma=3, scale=scene_density_map_scale),
+    ),
+)
+
 data = edict(
     train=edict(
         dataset=edict(
@@ -190,6 +218,27 @@ data = edict(
         collate_fn='batch_collect_fn',
         pin_memory=True,
     ),
+    test=edict(
+        dataset=edict(
+            type='CrossViewCrossScene', 
+            root=root, 
+            mode='test', 
+            ncam=n_sel_view, 
+            ori_h=ori_h, 
+            ori_w=ori_w, 
+            rescale=rescale,
+            extend=1.0,
+            prun_unvisible_pt_bev=True,
+            bev_trans_scale=0.0,
+            static_range=[102.4, 102.4, 6.4],
+            data_pipeline=test_data_pipeline,
+        ),
+        num_workers=2,
+        batch_size=1,
+        persistent_workers=True,
+        collate_fn='tta_batch_collect_fn',
+        pin_memory=True,
+    )
 )
 
 model = edict(
@@ -320,7 +369,7 @@ optimization = edict(
             weight_decay=0.01,
         ),
         clip_norm=True,
-        max_norm=50,
+        max_norm=1.0,
         scale_lr=True,
         param_group_cfg={
             'counter':5.0,

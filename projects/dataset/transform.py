@@ -435,7 +435,7 @@ class KDTreeDensetyMapGenerator(BaseDensityMapGenerator):
         self.leafsize, self.k, self.scale = leafsize, k, scale
 
     def __call__(self, pts, size):
-        pts, gt_count = pts.astype(np.int), pts.shape[0]
+        pts, gt_count = pts.astype(np.int32), pts.shape[0]
         density = np.zeros((size[1], size[0]), dtype=np.float32)
         if gt_count <= 0:
             return density
@@ -463,7 +463,7 @@ class GaussianFilterDensityMapGenerator(BaseDensityMapGenerator):
         self.sigma, self.scale = sigma, scale
     
     def __call__(self, pts, size):
-        pts, gt_count = pts.astype(np.int), pts.shape[0]
+        pts, gt_count = pts.astype(np.int32), pts.shape[0]
         density = np.zeros(size[::-1], dtype=np.float32) # xyz -> zyx | xy -> yx
         if gt_count <= 0:
             return density
@@ -507,7 +507,7 @@ class GenDensity(object):
         world_range = R.input_data.get('world_range', self.world_range)
         assert self.bev_density_generator is not None
         res_x, res_y = (world_range[3]-world_range[0]) / self.bev_hm_w, (world_range[4]-world_range[1]) / self.bev_hm_h
-        pts_bev = ((R.labels.pt_bev[...,:2] - np.array([world_range[0], world_range[1]]).reshape(-1, 2)) / np.array([res_x, res_y]).reshape(-1, 2)).astype(np.int)
+        pts_bev = ((R.labels.pt_bev[...,:2] - np.array([world_range[0], world_range[1]]).reshape(-1, 2)) / np.array([res_x, res_y]).reshape(-1, 2)).astype(np.int32)
         R.labels.density_bev = self.bev_density_generator(pts_bev, (self.bev_hm_w, self.bev_hm_h))
 
     def __call__(self, R, *args, **kwargs):
@@ -547,7 +547,7 @@ class GenDensity3D(object):
         world_range = R.input_data.get('world_range', self.world_range)
         assert self.vox_density_generator is not None
         res_x, res_y, res_z = (world_range[3]-world_range[0]) / self.vox_hm_w, (world_range[4]-world_range[1]) / self.vox_hm_h, (world_range[5]-world_range[2]) / self.vox_hm_z
-        pts_bev = ((R.labels.pt_bev[...,:3] - np.array([world_range[0], world_range[1], world_range[2]]).reshape(-1, 3)) / np.array([res_x, res_y, res_z]).reshape(-1, 3)).astype(np.int)
+        pts_bev = ((R.labels.pt_bev[...,:3] - np.array([world_range[0], world_range[1], world_range[2]]).reshape(-1, 3)) / np.array([res_x, res_y, res_z]).reshape(-1, 3)).astype(np.int32)
         R.labels.density_vox = self.vox_density_generator(pts_bev, (self.vox_hm_w, self.vox_hm_h, self.vox_hm_z))
 
     def __call__(self, R, *args, **kwargs):
