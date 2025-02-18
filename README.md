@@ -14,6 +14,10 @@ CountFormer is a concise 3D multi-view counting (MVC) framework towards deployme
 **Framework of the CountFormer.** The Image Encoder extracts multi-view and multi-level features (MVML) from the multi-view images of the scene. ImageLevel Camera Embedding Module fuses camera intrinsic and extrinsic with the MVML features. The elaborate Cross-View Attention Module, a sophisticated attention component, transforms the image-level features into scene-level volume representations. Besides main components, a 2D Density Predictor is used to estimate the image space density, 3D Density Predictors are employed to regress for the 3D scene-level density, and a simple feature pyramid network fuses the multi-scale voxel features.
 
 ## News
+**2025.02.18** Release the refined labels w.r.t. the CityStreet dataset.
+
+**2025.02.18** Release the training log & pth on the CSCV benchnark.
+
 **2024.07.08** The code of CountFormer is released on github for research purpose. 
 
 **2024.07.01** The CountFormer has been accepted by the Top-tier conference ECCV 2024.   
